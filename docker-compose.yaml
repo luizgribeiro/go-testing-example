@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: my_postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydatabase
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  liquibase:
+    image: liquibase/liquibase
+    container_name: my_liquibase
+    depends_on:
+      - postgres
+    volumes:
+      - ./changelog:/liquibase/changelog
+      - ./run-migration.sh:/liquibase/run-migration.sh
+    entrypoint: ["sh", "./run-migration.sh"]
+
+volumes:
+  postgres_data:

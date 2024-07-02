@@ -1,0 +1,17 @@
+with-expecter: true
+packages:
+  luizgribeiro/testing/pkg/service:
+        config:
+        interfaces:
+            execer:
+                # Modify package-level config for this specific interface (if applicable)
+                config:
+            # select the interfaces you want mocked
+            transactionBeginner:
+                # Modify package-level config for this specific interface (if applicable)
+                config:
+  luizgribeiro/testing/pkg/client:
+        config:
+        interfaces:
+            DBTransactioner:
+                config:

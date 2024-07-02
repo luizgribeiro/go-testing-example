@@ -1,0 +1,47 @@
+databaseChangeLog:
+- changeSet:
+    id: 1
+    author: luiz
+    changes:
+      - createTable:
+          tableName: user
+          columns:
+            - column:
+                name: id
+                type: uuid
+                constraints:
+                  primaryKey: true
+                  nullable: false
+            - column:
+                name: name
+                type: text
+            - column:
+                name: email
+                type: text
+      - createTable:
+          tableName: account
+          columns:
+            - column:
+                name: id
+                type: uuid
+                constraints:
+                  primaryKey: true
+                  nullable: false
+            - column:
+                name: handler
+                type: text
+            - column:
+                name: created_at
+                type: datetime
+            - column:
+                name: last_login
+                type: datetime
+            - column:
+                name: user_id
+                type: uuid
+      - addForeignKeyConstraint:
+          baseTableName: account
+          baseColumnNames: user_id
+          constraintName: fk_account_user
+          referencedTableName: user
+          referencedColumnNames: id
