@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"luizgribeiro/testing/pkg/client"
 	"luizgribeiro/testing/pkg/model"
 	"time"
@@ -46,6 +47,18 @@ func (usrSvc *UserService) CreateUserWithAccount(ctx context.Context, userAcc *m
 		}
 
 	}()
+
+	now := time.Now()
+
+	age := now.Year() - userAcc.BirthDate.Year()
+
+	if now.Month() < userAcc.BirthDate.Month() || (userAcc.BirthDate.Month() == now.Month() && now.Day() < userAcc.BirthDate.Day()) {
+		age--
+	}
+
+	if age < 12 {
+		return errors.New("Too young")
+	}
 
 	err = usrSvc.userClient.CreateUser(ctx, tx, userAcc)
 	if err != nil {
