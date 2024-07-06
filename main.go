@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -37,19 +38,24 @@ func main() {
 	http.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
 		switch r.Method {
-		case http.MethodGet:
-			fmt.Println("get enviado")
 		case http.MethodPost:
 			var userAccount model.UserAccount
 			err := json.NewDecoder(r.Body).Decode(&userAccount)
+			userAccount.User.ID = uuid.New()
+			userAccount.AccountID = uuid.New()
+			userAccount.UserID = userAccount.User.ID
 			fmt.Printf("%+v\n", userAccount)
 			if err != nil {
 				fmt.Println("error")
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
 			}
 
-			userService.CreateUserWithAccount(ctx, &userAccount)
+			err = userService.CreateUserWithAccount(ctx, &userAccount)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			}
+		default:
+			http.Error(w, "unsupported method", http.StatusMethodNotAllowed)
 		}
 	})
 
@@ -58,7 +64,7 @@ func main() {
 
 	go func() {
 		fmt.Println("Starting HTTP Server")
-		if err := srv.ListenAndServe(); err != nil {
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 			fmt.Println("Error while starting server", err)
 		}
 	}()
