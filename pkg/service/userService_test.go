@@ -21,11 +21,29 @@ import (
 
 var usrId = uuid.New()
 
-var userAccount = &model.UserAccount{
+var oldEnoughUserAccount = &model.UserAccount{
 	User: model.User{
-		ID:    usrId,
-		Name:  "user name",
-		Email: "user@mail.com",
+		ID:        usrId,
+		Name:      "user name",
+		Email:     "user@mail.com",
+		BirthDate: time.Date(2010, time.November, 24, 0, 0, 0, 0, time.UTC),
+	},
+	Account: model.Account{
+		ID:        uuid.New(),
+		Handler:   "some handler",
+		CreatedAt: time.Now(),
+		LastLogin: time.Now(),
+		UserID:    usrId,
+	},
+	AccountID: uuid.New(),
+}
+
+var tooYoungUserAccount = &model.UserAccount{
+	User: model.User{
+		ID:        usrId,
+		Name:      "user name",
+		Email:     "user@mail.com",
+		BirthDate: time.Date(2020, time.November, 24, 0, 0, 0, 0, time.UTC),
 	},
 	Account: model.Account{
 		ID:        uuid.New(),
@@ -37,17 +55,17 @@ var userAccount = &model.UserAccount{
 	AccountID: uuid.New(),
 }
 var userQueryParams = pgx.NamedArgs{
-	"id":    userAccount.User.ID,
-	"name":  userAccount.Name,
-	"email": userAccount.Email,
+	"id":    oldEnoughUserAccount.User.ID,
+	"name":  oldEnoughUserAccount.Name,
+	"email": oldEnoughUserAccount.Email,
 }
 
 var accountQueryParams = pgx.NamedArgs{
-	"id":         userAccount.AccountID,
-	"handler":    userAccount.Handler,
-	"created_at": userAccount.CreatedAt,
-	"last_login": userAccount.LastLogin,
-	"user_id":    userAccount.UserID,
+	"id":         oldEnoughUserAccount.AccountID,
+	"handler":    oldEnoughUserAccount.Handler,
+	"created_at": oldEnoughUserAccount.CreatedAt,
+	"last_login": oldEnoughUserAccount.LastLogin,
+	"user_id":    oldEnoughUserAccount.UserID,
 }
 var errMock = errors.New("mocked error")
 
@@ -76,9 +94,21 @@ var _ = Describe("AccountService", func() {
 				It("Shoud fail", func() {
 					mockBeginner.EXPECT().Begin(ctx).Return(nil, errMock)
 
-					err := userService.CreateUserWithAccount(ctx, userAccount)
+					err := userService.CreateUserWithAccount(ctx, oldEnoughUserAccount)
 
 					Expect(err).To(Equal(errMock))
+				})
+			})
+
+			When("User is not old enough (12)", func() {
+				It("Should fail", func() {
+					mockBeginner.EXPECT().Begin(ctx).Return(mockTx, nil)
+					mockTx.EXPECT().Rollback(ctx).Return(nil)
+
+					err := userService.CreateUserWithAccount(ctx, tooYoungUserAccount)
+
+					Expect(err).To(Equal(errors.New("Too young")))
+
 				})
 			})
 
@@ -89,7 +119,7 @@ var _ = Describe("AccountService", func() {
 					mockTx.EXPECT().Rollback(ctx).Return(nil)
 					mockBeginner.EXPECT().Begin(ctx).Return(mockTx, nil)
 
-					err := userService.CreateUserWithAccount(ctx, userAccount)
+					err := userService.CreateUserWithAccount(ctx, oldEnoughUserAccount)
 
 					Expect(err).To(Equal(errMock))
 				})
@@ -103,7 +133,7 @@ var _ = Describe("AccountService", func() {
 					mockTx.EXPECT().Rollback(ctx).Return(nil)
 					mockBeginner.EXPECT().Begin(ctx).Return(mockTx, nil)
 
-					err := userService.CreateUserWithAccount(ctx, userAccount)
+					err := userService.CreateUserWithAccount(ctx, oldEnoughUserAccount)
 
 					Expect(err).To(Equal(errMock))
 				})
@@ -117,7 +147,7 @@ var _ = Describe("AccountService", func() {
 					mockTx.EXPECT().Commit(ctx).Return(nil)
 					mockBeginner.EXPECT().Begin(ctx).Return(mockTx, nil)
 
-					err := userService.CreateUserWithAccount(ctx, userAccount)
+					err := userService.CreateUserWithAccount(ctx, oldEnoughUserAccount)
 
 					Expect(err).To(BeNil())
 				})
